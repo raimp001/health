@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Insurance Claim Submission</h2>
+            <div class="card">
+                <div class="card-body">
+                    <form id="claimForm">
+                        <!-- Payer Information -->
+                        <div class="mb-4">
+                            <h4>Payer Information</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="payerId">Payer ID</label>
+                                        <input type="text" id="payerId" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="payerName">Payer Name</label>
+                                        <input type="text" id="payerName" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subscriber Information -->
+                        <div class="mb-4">
+                            <h4>Subscriber Information</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="subscriberId">Subscriber ID</label>
+                                        <input type="text" id="subscriberId" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="subscriberName">Subscriber Name</label>
+                                        <input type="text" id="subscriberName" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="subscriberDOB">Date of Birth</label>
+                                        <input type="date" id="subscriberDOB" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="relationshipToSubscriber">Relationship to Subscriber</label>
+                                        <select id="relationshipToSubscriber" class="form-select">
+                                            <option value="self">Self</option>
+                                            <option value="spouse">Spouse</option>
+                                            <option value="child">Child</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Information -->
+                        <div class="mb-4">
+                            <h4>Service Information</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="dateOfService">Date of Service</label>
+                                        <input type="date" id="dateOfService" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="placeOfService">Place of Service</label>
+                                        <select id="placeOfService" class="form-select">
+                                            <option value="11">Office</option>
+                                            <option value="21">Inpatient Hospital</option>
+                                            <option value="22">Outpatient Hospital</option>
+                                            <option value="23">Emergency Room</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diagnosis Codes -->
+                        <div class="mb-4">
+                            <h4>Diagnosis Codes</h4>
+                            <div id="diagnosisCodes">
+                                <!-- Populated from bill data -->
+                            </div>
+                        </div>
+
+                        <!-- Procedure Codes -->
+                        <div class="mb-4">
+                            <h4>Procedure Codes</h4>
+                            <div id="procedureCodes">
+                                <!-- Populated from bill data -->
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary">Submit Claim</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/claim.js') }}"></script>
+{% endblock %}

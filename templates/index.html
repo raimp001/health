@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <form id="billingForm" class="billing-form">
+        <!-- Patient Info Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="patientName">Patient Name</label>
+                    <input type="text" id="patientName" class="form-input" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="patientDOB">Date of Birth</label>
+                    <input type="date" id="patientDOB" class="form-input" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email and Insurance Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="form-input" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="insurance">Insurance Provider</label>
+                    <select id="insurance" class="form-select">
+                        <option value="">Self Pay</option>
+                        <option value="BCBS">Blue Cross Blue Shield</option>
+                        <option value="Aetna">Aetna</option>
+                        <option value="UHC">United Healthcare</option>
+                        <option value="Cigna">Cigna</option>
+                        <option value="Medicare">Medicare</option>
+                        <option value="Medicaid">Medicaid</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Policy Number Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="policyNumber">Policy Number</label>
+                    <input type="text" id="policyNumber" class="form-input">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Container -->
+        <div class="tabs-container">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#diagnoses">Diagnoses</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#procedures">Procedures</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#labs">Labs</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#radiology">Radiology</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#other">Other Services</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#charges">Additional Charges</button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-3 border-start border-end border-bottom rounded-bottom">
+                <!-- Diagnoses Tab -->
+                <div class="tab-pane fade show active" id="diagnoses">
+                    <div class="manual-entry-container">
+                        <div class="input-group">
+                            <div class="form-group">
+                                <label>ICD-10 Code</label>
+                                <input type="text" id="diagnosisCode" class="form-input" placeholder="Enter ICD-10 code">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" id="diagnosisDescription" class="form-input" placeholder="Enter diagnosis description">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount ($)</label>
+                                <input type="number" id="diagnosisAmount" class="form-input" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <button type="button" class="add-button" onclick="addManualDiagnosis()">Add Diagnosis</button>
+                        </div>
+                    </div>
+                    <div id="diagnosesList"></div>
+                </div>
+
+                <!-- Other tabs remain the same -->
+                <div class="tab-pane fade" id="procedures">
+                    <!-- Procedures content -->
+                    <div class="manual-entry-container">
+                        <div class="input-group">
+                            <div class="form-group">
+                                <label>Service Code</label>
+                                <input type="text" class="form-input service-code" placeholder="Enter service code">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" class="form-input service-description" placeholder="Enter service description">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount ($)</label>
+                                <input type="number" class="form-input service-amount" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <button type="button" class="add-button">Add Service</button>
+                        </div>
+                    </div>
+                    <div id="proceduresList"></div>
+                </div>
+
+                <!-- Labs Tab -->
+                <div class="tab-pane fade" id="labs">
+                    <div class="manual-entry-container">
+                        <div class="input-group">
+                            <div class="form-group">
+                                <label>Service Code</label>
+                                <input type="text" class="form-input service-code" placeholder="Enter service code">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" class="form-input service-description" placeholder="Enter service description">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount ($)</label>
+                                <input type="number" class="form-input service-amount" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <button type="button" class="add-button">Add Service</button>
+                        </div>
+                    </div>
+                    <div id="labsList"></div>
+                </div>
+
+                <!-- Radiology Tab -->
+                <div class="tab-pane fade" id="radiology">
+                    <div class="manual-entry-container">
+                        <div class="input-group">
+                            <div class="form-group">
+                                <label>Service Code</label>
+                                <input type="text" class="form-input service-code" placeholder="Enter service code">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" class="form-input service-description" placeholder="Enter service description">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount ($)</label>
+                                <input type="number" class="form-input service-amount" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <button type="button" class="add-button">Add Service</button>
+                        </div>
+                    </div>
+                    <div id="radiologyList"></div>
+                </div>
+
+                <!-- Other Services Tab -->
+                <div class="tab-pane fade" id="other">
+                    <div class="manual-entry-container">
+                        <div class="input-group">
+                            <div class="form-group">
+                                <label>Service Code</label>
+                                <input type="text" class="form-input service-code" placeholder="Enter service code">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" class="form-input service-description" placeholder="Enter service description">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount ($)</label>
+                                <input type="number" class="form-input service-amount" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <button type="button" class="add-button">Add Service</button>
+                        </div>
+                    </div>
+                    <div id="otherList"></div>
+                </div>
+
+                <!-- Additional Charges Tab -->
+                <div class="tab-pane fade" id="charges">
+                    <div class="manual-entry-container">
+                        <div class="input-group">
+                            <div class="form-group">
+                                <label>Service Code</label>
+                                <input type="text" class="form-input service-code" placeholder="Enter service code">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" class="form-input service-description" placeholder="Enter service description">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount ($)</label>
+                                <input type="number" class="form-input service-amount" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <button type="button" class="add-button">Add Service</button>
+                        </div>
+                    </div>
+                    <div id="chargesList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total and Form Buttons -->
+        <div class="row mt-4">
+            <div class="col text-end">
+                <h3>Total: $<span id="totalAmount">0.00</span></h3>
+                <small class="text-muted">*This is a simulated total</small>
+            </div>
+        </div>
+
+        <div class="form-footer mt-4">
+            <button type="button" class="clear-button" onclick="clearForm()">Clear Form</button>
+            <button type="submit" class="submit-button">Submit Bill</button>
+        </div>
+    </form>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payment Options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-section">
+                        <label class="form-label">Select Payment Method</label>
+                        <select id="paymentMethod" class="form-select">
+                            <option value="bank">Bank Transfer</option>
+                            <option value="crypto">Cryptocurrency</option>
+                        </select>
+                    </div>
+
+                    <!-- Bank Payment Section -->
+                    <div id="bankPayment">
+                        <div class="form-section">
+                            <label class="form-label">Select Currency</label>
+                            <select id="currencySelect" class="form-select">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                            <div id="exchangeRateInfo" class="text-muted mt-2"></div>
+                        </div>
+                        <div class="form-section">
+                            <label class="form-label">Bank Name</label>
+                            <input type="text" id="bankName" class="form-input" placeholder="Enter bank name" required>
+                        </div>
+                        <div class="form-section">
+                            <label class="form-label">Account Number</label>
+                            <input type="text" id="accountNumber" class="form-input" placeholder="Enter account number" required>
+                        </div>
+                        <div class="form-section">
+                            <label class="form-label">Routing Number</label>
+                            <input type="text" id="routingNumber" class="form-input" placeholder="Enter routing number" required>
+                        </div>
+                    </div>
+
+                    <!-- Crypto Payment Section -->
+                    <div id="cryptoPayment" style="display: none;">
+                        <div class="form-section">
+                            <label class="form-label">Select Cryptocurrency</label>
+                            <select id="cryptoSelector" class="form-select">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                        </div>
+                        <p>Amount to pay: <span id="cryptoAmount"></span> <span id="selectedCrypto"></span></p>
+                        <div class="alert alert-info">
+                            <small>Prices are updated every 30 seconds. The final amount might vary slightly due to price fluctuations.</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-primary mt-3">
+                        Total Amount: <span id="paymentAmount">$0.00</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" onclick="processPayment()">Confirm Payment</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="downloadBillPdf(window.currentBillId)">
+                        Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/billing.js') }}"></script>
+<script src="{{ url_for('static', filename='js/crypto.js') }}"></script>
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+{% endblock %}
