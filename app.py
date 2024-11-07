@@ -1,6 +1,6 @@
 import os
 import time
-from flask import Flask, render_template, jsonify, request, send_file, abort
+from flask import Flask, render_template, jsonify, request, send_file, abort, send_from_directory
 from flask_mail import Mail, Message
 from decimal import Decimal
 from models import db, Bill, Diagnosis, Procedure, InsuranceClaim
@@ -37,10 +37,8 @@ db.init_app(app)
 # Initialize database tables
 with app.app_context():
     try:
-        # Drop all tables and recreate them
-        db.drop_all()
         db.create_all()
-        app.logger.info("Database tables recreated successfully")
+        app.logger.info("Database tables created successfully")
     except Exception as e:
         app.logger.error(f"Database error: {str(e)}")
 
@@ -62,6 +60,28 @@ STATIC_CRYPTO_PRICES = {
     'USDT': 1.00,
     'USDC': 1.00
 }
+
+@app.route('/')
+def index():
+    try:
+        app.logger.info("Rendering index page")
+        return render_template('index.html')
+    except Exception as e:
+        app.logger.error(f"Error rendering template: {str(e)}")
+        return f"Error loading page: {str(e)}", 500
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
+
+@app.route('/dashboard')
+def dashboard():
+    try:
+        payments = Bill.query.order_by(Bill.created_at.desc()).all()
+        return render_template('dashboard.html', payments=payments)
+    except Exception as e:
+        app.logger.error(f"Error loading dashboard: {str(e)}")
+        return f"Error loading dashboard: {str(e)}", 500
 
 @app.route('/get_exchange_rates')
 def get_exchange_rates():
@@ -90,24 +110,6 @@ def get_crypto_prices():
             'success': False,
             'error': str(e)
         }), 500
-
-@app.route('/')
-def index():
-    try:
-        app.logger.info("Rendering index page")
-        return render_template('index.html')
-    except Exception as e:
-        app.logger.error(f"Error rendering template: {str(e)}")
-        return f"Error loading page: {str(e)}", 500
-
-@app.route('/dashboard')
-def dashboard():
-    try:
-        payments = Bill.query.order_by(Bill.created_at.desc()).all()
-        return render_template('dashboard.html', payments=payments)
-    except Exception as e:
-        app.logger.error(f"Error loading dashboard: {str(e)}")
-        return f"Error loading dashboard: {str(e)}", 500
 
 @app.route('/claim/<int:bill_id>')
 def claim_form(bill_id):
