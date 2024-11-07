@@ -60,14 +60,44 @@ A modern healthcare billing application that enables medical payment processing 
 - Real-time exchange rate updates
 - Multiple currency support
 
-## Getting Started
+## Deployment
+
+This application is designed to be deployed and run on Replit. Follow these steps to deploy:
+
+1. Fork the project on Replit:
+   - Visit [https://replit.com/@raimp001/HealthBillPay](https://replit.com/@raimp001/HealthBillPay)
+   - Click the "Fork" button
+
+2. Configure environment variables in your Replit project:
+   - Open the "Secrets" tab in your Replit project
+   - Add the following environment variables:
+     ```
+     DATABASE_URL=postgresql://...
+     MAIL_USERNAME=your-email@gmail.com
+     MAIL_PASSWORD=your-email-password
+     STRIPE_PUBLISHABLE_KEY=your-stripe-key
+     COINBASE_COMMERCE_API_KEY=your-coinbase-key
+     ```
+
+3. Deploy:
+   - Click the "Run" button in Replit
+   - The application will automatically:
+     - Install dependencies
+     - Configure the database
+     - Start the server
+
+4. Access your deployed application:
+   - Use the URL provided by Replit
+   - The format will be: `https://healthbillpay.[your-replit-username].repl.co`
+
+## Development Setup
 
 ### Prerequisites
 - Python 3.11 or higher
 - PostgreSQL database
 - SMTP server access for email notifications
 
-### Installation
+### Local Installation
 
 1. Clone the repository:
    ```bash
@@ -80,46 +110,14 @@ A modern healthcare billing application that enables medical payment processing 
    pip install -r requirements.txt
    ```
 
-3. Configure environment variables:
-   ```env
-   DATABASE_URL=postgresql://...
-   MAIL_USERNAME=your-email@gmail.com
-   MAIL_PASSWORD=your-email-password
-   STRIPE_PUBLISHABLE_KEY=your-stripe-key
-   COINBASE_COMMERCE_API_KEY=your-coinbase-key
-   ```
+3. Configure environment variables as described in the deployment section
 
-4. Initialize the database:
+4. Start the application:
    ```bash
-   flask db upgrade
+   python main.py
    ```
-
-### Running the Application
-
-Start the application:
-```bash
-python main.py
-```
 
 The application will be available at `http://localhost:5000`
-
-## Deployment
-
-### Deploying on Replit
-
-1. Fork the project on Replit
-2. Set up the required environment variables in the Replit Secrets tab
-3. The application will automatically configure the database and dependencies
-4. Click the "Run" button to start the server
-
-### Environment Variables
-
-Required environment variables:
-- `DATABASE_URL`: PostgreSQL connection string
-- `MAIL_USERNAME`: Email service username
-- `MAIL_PASSWORD`: Email service password
-- `STRIPE_PUBLISHABLE_KEY`: Stripe API key (for payment processing)
-- `COINBASE_COMMERCE_API_KEY`: Coinbase API key (for crypto payments)
 
 ## Project Structure
 
