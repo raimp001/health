@@ -1,6 +1,6 @@
 import os
 import time
-from flask import Flask, render_template, jsonify, request, send_file, abort, send_from_directory
+from flask import Flask, render_template, jsonify, request, send_file, abort, send_from_directory, redirect, url_for
 from flask_mail import Mail, Message
 from decimal import Decimal
 from models import db, Bill, Diagnosis, Procedure, InsuranceClaim
@@ -13,8 +13,22 @@ import json
 from flask_caching import Cache
 from functools import wraps
 import threading
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+# Configure CORS
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://www.billingdog.net",
+            "https://billingdog.net",
+            "http://localhost:5000"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Configure logging
 logging.basicConfig(
@@ -22,6 +36,28 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = app.logger
+
+# Security headers middleware
+@app.after_request
+def add_security_headers(response):
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
+# Domain redirect middleware
+@app.before_request
+def redirect_to_preferred_domain():
+    if not request.is_secure and not app.debug:
+        url = request.url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
+
+    if request.headers.get('X-Forwarded-Proto', 'http') == 'http':
+        url = request.url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
+
+    return None
 
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
