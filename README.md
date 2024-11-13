@@ -1,6 +1,6 @@
 # BillingDog - Healthcare Billing System
 
-A modern healthcare billing application that enables medical payment processing with cryptocurrency support and automated email receipts. Built with Flask and modern JavaScript.
+A modern healthcare billing application that enables medical payment processing with cryptocurrency support and automated email receipts. Built with Flask and modern JavaScript, deployed on Replit.
 
 ![BillingDog Interface](static/images/billingdog_interface.png)
 
@@ -41,13 +41,13 @@ A modern healthcare billing application that enables medical payment processing 
 
 ## Quick Start Guide
 
-### 1. Fork on Replit
+### 1. Access on Replit
 [![Run on Replit](https://replit.com/badge/github/raimp001/HealthBillPay)](https://replit.com/@raimp001/HealthBillPay)
 
-Click the "Run on Replit" button above or visit [https://replit.com/@raimp001/HealthBillPay](https://replit.com/@raimp001/HealthBillPay) and click "Fork".
+Click the "Run on Replit" button above to fork and run the application directly in your browser.
 
 ### 2. Configure Environment Variables
-After forking, set up your environment variables in the Replit Secrets tab:
+In your Replit project's Secrets tab, add the following environment variables:
 
 Required secrets:
 ```
@@ -58,13 +58,10 @@ STRIPE_PUBLISHABLE_KEY=your-stripe-key
 COINBASE_COMMERCE_API_KEY=your-coinbase-key
 ```
 
-### 3. Deploy and Run
+### 3. Run the Application
 1. Click the "Run" button in your Replit project
-2. The application will automatically:
-   - Install required dependencies
-   - Initialize the PostgreSQL database
-   - Start the Flask server
-3. Access your application at the provided Replit URL
+2. Wait for the application to initialize (this may take a few moments)
+3. Access the application through the provided Replit URL in the webview panel
 
 ## Application Screenshots
 
@@ -94,7 +91,7 @@ Track all payments and claims through the comprehensive dashboard.
 ## Detailed Setup Instructions
 
 ### 1. Database Setup
-The application automatically sets up the PostgreSQL database on first run. Tables created include:
+The application automatically initializes the PostgreSQL database when run on Replit. Tables created include:
 - Bills
 - Diagnoses
 - Procedures
@@ -107,7 +104,7 @@ For Gmail users:
 3. Use the App Password in your MAIL_PASSWORD secret
 
 ### 3. Payment Integration
-Configure payment providers:
+Configure payment providers in Replit Secrets:
 1. Stripe: Add your publishable key to enable bank transfers
 2. Coinbase Commerce: Add API key for cryptocurrency payments
 
@@ -132,23 +129,32 @@ HealthBillPay/
 └── requirements.txt   # Python dependencies
 ```
 
-## Troubleshooting
+## Troubleshooting Common Replit Issues
 
-### Common Issues
-1. Database Connection
-   - Verify DATABASE_URL format
-   - Check PostgreSQL service status
-   - Ensure correct credentials
+### 1. Application Not Starting
+- Check if all required secrets are properly configured in Replit Secrets tab
+- Verify the "Run" button shows the application is running
+- Wait for the initial database setup to complete
 
-2. Email Sending
-   - Verify SMTP settings
-   - Check email credentials
-   - Enable less secure app access if needed
+### 2. Database Connection Issues
+- Ensure DATABASE_URL is correctly formatted in Replit Secrets
+- Check if PostgreSQL service is running
+- Verify database credentials are correct
 
-3. Payment Processing
-   - Validate API keys
-   - Check payment provider status
-   - Verify webhook configurations
+### 3. Payment Processing
+- Confirm all payment-related API keys are set in Replit Secrets
+- Check payment provider service status
+- Verify webhook configurations
+
+### 4. Email Sending
+- Verify SMTP settings
+- Ensure email credentials are correctly set in Replit Secrets
+- Check if less secure app access is enabled if needed
+
+### 5. Performance Issues
+- Clear your browser cache
+- Refresh the Replit workspace
+- Check Replit server status
 
 ## Support and Updates
 
