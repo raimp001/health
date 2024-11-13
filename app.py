@@ -10,6 +10,9 @@ import requests
 from requests.exceptions import RequestException
 from pdf_generator import generate_bill_pdf
 import json
+from flask_caching import Cache
+from functools import wraps
+import threading
 
 app = Flask(__name__)
 
@@ -34,6 +37,17 @@ app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+
+# Cache configuration
+app.config['CACHE_TYPE'] = 'simple'
+cache = Cache(app)
+
+# Rate limiting configuration
+RATE_LIMIT = 60  # requests per minute
+RATE_LIMIT_WINDOW = 60  # seconds
+request_counts = {}
+request_times = {}
+request_lock = threading.Lock()
 
 # Initialize extensions
 mail = Mail(app)
@@ -72,11 +86,35 @@ MAX_RETRIES = 3
 RETRY_DELAY = 1  # seconds
 REQUEST_TIMEOUT = 5  # seconds
 
-# Cache variables
-last_rates_update = 0
-last_crypto_update = 0
-cached_exchange_rates = None
-cached_crypto_prices = None
+def rate_limit(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        ip = request.remote_addr
+        
+        with request_lock:
+            current_time = time.time()
+            
+            # Clean up old entries
+            for stored_ip in list(request_times.keys()):
+                if current_time - request_times[stored_ip] > RATE_LIMIT_WINDOW:
+                    del request_times[stored_ip]
+                    del request_counts[stored_ip]
+            
+            # Check rate limit
+            if ip in request_counts:
+                if request_counts[ip] >= RATE_LIMIT:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Rate limit exceeded. Please try again later.',
+                        'retry_after': int(request_times[ip] + RATE_LIMIT_WINDOW - current_time)
+                    }), 429
+                request_counts[ip] += 1
+            else:
+                request_counts[ip] = 1
+                request_times[ip] = current_time
+        
+        return f(*args, **kwargs)
+    return decorated_function
 
 def get_live_exchange_rates():
     """Fetch live exchange rates from an API with retry mechanism"""
@@ -105,7 +143,7 @@ def get_live_exchange_rates():
         except requests.exceptions.RequestException as e:
             logger.error(f"Attempt {attempt + 1}/{MAX_RETRIES} failed: {str(e)}")
             if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY)
+                time.sleep(RETRY_DELAY * (2 ** attempt))  # Exponential backoff
             continue
         except Exception as e:
             logger.error(f"Unexpected error fetching exchange rates: {str(e)}")
@@ -137,6 +175,16 @@ def get_live_crypto_prices():
                     headers=headers,
                     timeout=REQUEST_TIMEOUT
                 )
+                
+                if response.status_code == 502:
+                    logger.error(f"Bad Gateway (502) error for {symbol}")
+                    if attempt < MAX_RETRIES - 1:
+                        delay = RETRY_DELAY * (2 ** attempt)  # Exponential backoff
+                        logger.info(f"Retrying after {delay} seconds...")
+                        time.sleep(delay)
+                        continue
+                    break
+                
                 response.raise_for_status()
                 data = response.json()
                 
@@ -150,7 +198,8 @@ def get_live_crypto_prices():
             except requests.exceptions.RequestException as e:
                 logger.error(f"Attempt {attempt + 1}/{MAX_RETRIES} failed for {symbol}: {str(e)}")
                 if attempt < MAX_RETRIES - 1:
-                    time.sleep(RETRY_DELAY)
+                    delay = RETRY_DELAY * (2 ** attempt)  # Exponential backoff
+                    time.sleep(delay)
                 continue
             except ValueError as e:
                 logger.error(f"Invalid response for {symbol}: {str(e)}")
@@ -188,27 +237,24 @@ def dashboard():
         return f"Error loading dashboard: {str(e)}", 500
 
 @app.route('/get_exchange_rates')
+@rate_limit
+@cache.cached(timeout=CACHE_DURATION)
 def get_exchange_rates():
-    global last_rates_update, cached_exchange_rates
-    
     try:
-        current_time = time.time()
+        rates = get_live_exchange_rates()
+        if rates:
+            return jsonify({
+                'success': True,
+                'rates': rates,
+                'is_live': True,
+                'timestamp': time.time()
+            })
         
-        if cached_exchange_rates is None or (current_time - last_rates_update) >= CACHE_DURATION:
-            rates = get_live_exchange_rates()
-            if rates:
-                cached_exchange_rates = rates
-                last_rates_update = current_time
-                logger.info("Exchange rates cache updated")
-            else:
-                logger.warning("Using fallback exchange rates")
-                cached_exchange_rates = STATIC_EXCHANGE_RATES
-                
         return jsonify({
             'success': True,
-            'rates': cached_exchange_rates,
-            'is_live': cached_exchange_rates != STATIC_EXCHANGE_RATES,
-            'timestamp': last_rates_update
+            'rates': STATIC_EXCHANGE_RATES,
+            'is_live': False,
+            'timestamp': time.time()
         })
     except Exception as e:
         logger.error(f"Error in exchange rates endpoint: {str(e)}")
@@ -220,27 +266,24 @@ def get_exchange_rates():
         })
 
 @app.route('/get_crypto_prices')
+@rate_limit
+@cache.cached(timeout=CACHE_DURATION)
 def get_crypto_prices():
-    global last_crypto_update, cached_crypto_prices
-    
     try:
-        current_time = time.time()
+        prices = get_live_crypto_prices()
+        if prices:
+            return jsonify({
+                'success': True,
+                'prices': prices,
+                'is_live': True,
+                'timestamp': time.time()
+            })
         
-        if cached_crypto_prices is None or (current_time - last_crypto_update) >= CACHE_DURATION:
-            prices = get_live_crypto_prices()
-            if prices:
-                cached_crypto_prices = prices
-                last_crypto_update = current_time
-                logger.info("Crypto prices cache updated")
-            else:
-                logger.warning("Using fallback crypto prices")
-                cached_crypto_prices = STATIC_CRYPTO_PRICES
-                
         return jsonify({
             'success': True,
-            'prices': cached_crypto_prices,
-            'is_live': cached_crypto_prices != STATIC_CRYPTO_PRICES,
-            'timestamp': last_crypto_update
+            'prices': STATIC_CRYPTO_PRICES,
+            'is_live': False,
+            'timestamp': time.time()
         })
     except Exception as e:
         logger.error(f"Error in crypto prices endpoint: {str(e)}")
@@ -261,4 +304,4 @@ def status_badge(status):
     return badges.get(status, 'secondary')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False)

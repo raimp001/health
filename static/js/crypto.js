@@ -2,6 +2,9 @@ const SUPPORTED_CRYPTOCURRENCIES = ['BTC', 'ETH', 'USDC', 'USDT'];
 let cryptoPrices = {};
 let selectedCrypto = 'BTC';
 let cryptoBillAmount = 0;
+let retryCount = 0;
+const MAX_RETRIES = 3;
+const BASE_DELAY = 1000; // 1 second
 
 // Fallback static prices
 const FALLBACK_PRICES = {
@@ -11,50 +14,77 @@ const FALLBACK_PRICES = {
     'USDT': 1.00
 };
 
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function updateCryptoPrices() {
+    const statusElement = document.getElementById('cryptoStatus');
     try {
-        const response = await fetch('/get_crypto_prices', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            }
-        });
+        retryCount = 0;
+        while (retryCount < MAX_RETRIES) {
+            try {
+                if (statusElement) {
+                    statusElement.textContent = 'Fetching prices...';
+                    statusElement.className = 'text-info small';
+                }
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (!data) {
-            throw new Error('Empty response received');
-        }
+                const response = await fetch('/get_crypto_prices', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
 
-        if (data.success) {
-            if (!data.prices || Object.keys(data.prices).length === 0) {
-                throw new Error('No price data received');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (!data) {
+                    throw new Error('Empty response received');
+                }
+
+                if (data.success) {
+                    if (!data.prices || Object.keys(data.prices).length === 0) {
+                        throw new Error('No price data received');
+                    }
+                    cryptoPrices = data.prices;
+                    console.log('Successfully updated crypto prices:', cryptoPrices);
+                    
+                    if (statusElement) {
+                        statusElement.textContent = data.is_live ? 
+                            'Live prices' : 
+                            'Using cached prices';
+                        statusElement.className = `text-${data.is_live ? 'success' : 'warning'} small`;
+                    }
+                    break;  // Success, exit retry loop
+                } else {
+                    throw new Error(data.error || 'Server returned error status');
+                }
+            } catch (error) {
+                retryCount++;
+                if (retryCount < MAX_RETRIES) {
+                    const delay = BASE_DELAY * Math.pow(2, retryCount);
+                    console.warn(`Retry ${retryCount}/${MAX_RETRIES} after ${delay}ms`);
+                    if (statusElement) {
+                        statusElement.textContent = `Retrying... (${retryCount}/${MAX_RETRIES})`;
+                        statusElement.className = 'text-warning small';
+                    }
+                    await sleep(delay);
+                } else {
+                    throw error;  // Rethrow after max retries
+                }
             }
-            cryptoPrices = data.prices;
-            console.log('Successfully updated crypto prices:', cryptoPrices);
-            
-            const statusElement = document.getElementById('cryptoStatus');
-            if (statusElement) {
-                statusElement.textContent = data.is_live ? 
-                    'Live prices' : 
-                    'Using cached prices';
-                statusElement.className = `text-${data.is_live ? 'success' : 'warning'} small`;
-            }
-        } else {
-            throw new Error(data.error || 'Server returned error status');
         }
     } catch (error) {
         console.error('Error fetching crypto prices:', error.message);
         console.warn('Using fallback prices');
         cryptoPrices = FALLBACK_PRICES;
         
-        const statusElement = document.getElementById('cryptoStatus');
         if (statusElement) {
-            statusElement.textContent = 'Using fallback prices';
+            statusElement.textContent = 'Using fallback prices due to connection issues';
             statusElement.className = 'text-warning small';
         }
     } finally {
